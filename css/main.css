@@ -336,7 +336,7 @@ img {
   color: var(--text-muted);
 }
 
-/* Спільний блок оцінок (щоденник + список рев'ю), зокрема 6 категорій */
+/* Спільний блок оцінок (щоденник + список рев'ю): страва + заклад */
 .review-scores {
   display: flex;
   flex-wrap: wrap;
@@ -1450,6 +1450,29 @@ img {
 
 .review-form__cats .rating-input {
   margin-bottom: 0;
+}
+
+.review-form__venue-cats {
+  margin-top: 0.35rem;
+  margin-bottom: 0.25rem;
+}
+
+.review-form__venue-lead {
+  margin: 0 0 0.65rem;
+  font-size: 0.88rem;
+  color: var(--text-muted);
+  line-height: 1.45;
+}
+
+.review-form__fieldset--venue-sum {
+  margin-top: 0.35rem;
+}
+
+.review-scores__row-pairs {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.65rem 1rem;
 }
 
 .review-form__input,

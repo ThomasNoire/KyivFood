@@ -323,13 +323,6 @@ window.KYIV_RESTAURANTS = [
     photo: "https://images.unsplash.com/photo-1514933651103-005eec06c04b?w=800&q=80",
   },
   {
-    id: "china-house-45",
-    name: "Чайнахай",
-    cuisine: "Китайська",
-    address: "вул. Басейна, 4",
-    photo: "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=800&q=80",
-  },
-  {
     id: "silk-way-46",
     name: "Silk Way",
     cuisine: "Узбецька / азійська",
