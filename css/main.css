@@ -131,11 +131,19 @@ img {
 }
 
 .brand__mark {
+  display: block;
   width: 32px;
   height: 32px;
   border-radius: 10px;
-  background: linear-gradient(135deg, var(--accent), #2d8f4a);
-  box-shadow: 0 4px 16px rgba(65, 194, 101, 0.35);
+  object-fit: cover;
+  flex-shrink: 0;
+  border: 1px solid rgba(65, 194, 101, 0.25);
+  box-shadow: 0 2px 14px rgba(65, 194, 101, 0.28);
+}
+
+.brand:hover .brand__mark {
+  border-color: rgba(65, 194, 101, 0.45);
+  box-shadow: 0 4px 18px rgba(65, 194, 101, 0.38);
 }
 
 .site-nav {
