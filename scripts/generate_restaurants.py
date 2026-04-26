@@ -37,6 +37,7 @@ RAW: list[tuple[str, str, str]] = [
     ("Пузата Хата", "Їдальня", "вул. Хрещатик, 15/4"),
     ("Under Wonder", "Європейська", "вул. Велика Васильківська, 21"),
     ("BAO", "Китайська", "вул. Антоновича, 176"),
+    ("Chinanay", "Китайська", "просп. Соборності, 7Б"),
     ("Benedict", "Сніданки", "вул. Горького, 141"),
     ("Milk Bar", "Десерти / кафе", "вул. Володимирська, 82/2"),
     ("Паньковський", "Європейська", "вул. Володимирська, 51"),
@@ -341,7 +342,7 @@ def slugify(name: str, idx: int) -> str:
 def main() -> None:
     seen: set[str] = set()
     out: list[dict] = []
-    max_n = 200
+    max_n = 201
     for i, (name, cuisine, addr) in enumerate(RAW[:max_n]):
         base = slugify(name, i)
         sid = base

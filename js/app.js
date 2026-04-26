@@ -12,6 +12,16 @@
   let lastPickRestaurantId = null;
   let pickListenersBound = false;
 
+  /** Шість категорій оцінювання запису в щоденнику (1–5 зірок кожна). */
+  const REVIEW_CATEGORY_DEFS = [
+    { key: "taste", label: "Смак страви", abbr: "Смак" },
+    { key: "presentation", label: "Подача та вигляд", abbr: "Подача" },
+    { key: "service", label: "Сервіс", abbr: "Сервіс" },
+    { key: "atmosphere", label: "Атмосфера закладу", abbr: "Атмосф." },
+    { key: "value", label: "Ціна / якість", abbr: "Ціна/як." },
+    { key: "hygiene", label: "Чистота та охайність", abbr: "Чистота" },
+  ];
+
   const els = {
     feed: document.getElementById("feed-list"),
     search: document.getElementById("global-search"),
@@ -193,7 +203,41 @@
     });
   }
 
-  function reviewVenueScore(rev) {
+  function reviewCategoryRatings(rev) {
+    const o = rev.categoryRatings;
+    if (!o || typeof o !== "object") return null;
+    const out = {};
+    for (let i = 0; i < REVIEW_CATEGORY_DEFS.length; i++) {
+      const k = REVIEW_CATEGORY_DEFS[i].key;
+      const n = Number(o[k]);
+      if (!Number.isFinite(n) || n < 1 || n > 5) return null;
+      out[k] = n;
+    }
+    return out;
+  }
+
+  /** Середнє шести категорій — загальний коефіцієнт запису. */
+  function reviewOverallScore(rev) {
+    const cr = reviewCategoryRatings(rev);
+    if (cr) {
+      let s = 0;
+      for (let i = 0; i < REVIEW_CATEGORY_DEFS.length; i++) {
+        s += cr[REVIEW_CATEGORY_DEFS[i].key];
+      }
+      return Math.round((s / REVIEW_CATEGORY_DEFS.length) * 10) / 10;
+    }
+    const d = reviewDishScoreLegacy(rev);
+    const v = reviewVenueScoreLegacy(rev);
+    if (d != null && v != null)
+      return Math.round(((d + v) / 2) * 10) / 10;
+    if (v != null) return v;
+    if (d != null) return d;
+    if (rev.rating != null && Number.isFinite(Number(rev.rating)))
+      return Number(rev.rating);
+    return null;
+  }
+
+  function reviewVenueScoreLegacy(rev) {
     if (rev.venueRating != null && Number.isFinite(Number(rev.venueRating)))
       return Number(rev.venueRating);
     if (rev.rating != null && Number.isFinite(Number(rev.rating)))
@@ -201,37 +245,65 @@
     return null;
   }
 
-  function reviewDishScore(rev) {
+  function reviewDishScoreLegacy(rev) {
     if (rev.dishRating != null && Number.isFinite(Number(rev.dishRating)))
       return Number(rev.dishRating);
     return null;
   }
 
-  function avgVenueRating(restaurantId) {
+  /** Підсумок «про страву»: смак + подача. */
+  function reviewDishAspectScore(rev) {
+    const cr = reviewCategoryRatings(rev);
+    if (cr)
+      return (
+        Math.round(((Number(cr.taste) + Number(cr.presentation)) / 2) * 10) /
+        10
+      );
+    return reviewDishScoreLegacy(rev);
+  }
+
+  /** Підсумок «про заклад»: сервіс, атмосфера, ціна/якість, чистота. */
+  function reviewVenueAspectScore(rev) {
+    const cr = reviewCategoryRatings(rev);
+    if (cr) {
+      const x =
+        (Number(cr.service) +
+          Number(cr.atmosphere) +
+          Number(cr.value) +
+          Number(cr.hygiene)) /
+        4;
+      return Math.round(x * 10) / 10;
+    }
+    return reviewVenueScoreLegacy(rev);
+  }
+
+  function avgOverallRating(restaurantId) {
     const list = reviews.filter((x) => x.restaurantId === restaurantId);
-    const vals = list.map(reviewVenueScore).filter((v) => v != null);
+    const vals = list.map(reviewOverallScore).filter((v) => v != null);
     if (!vals.length) return null;
     const sum = vals.reduce((a, b) => a + b, 0);
     return Math.round((sum / vals.length) * 10) / 10;
   }
 
-  function avgDishRating(restaurantId) {
+  function avgDishAspectRating(restaurantId) {
     const list = reviews.filter((x) => x.restaurantId === restaurantId);
-    const vals = list.map(reviewDishScore).filter((v) => v != null);
+    const vals = list.map(reviewDishAspectScore).filter((v) => v != null);
     if (!vals.length) return null;
     const sum = vals.reduce((a, b) => a + b, 0);
     return Math.round((sum / vals.length) * 10) / 10;
   }
 
-  /** Середня оцінка закладу (для карток каталогу тощо). */
+  function avgVenueAspectRating(restaurantId) {
+    const list = reviews.filter((x) => x.restaurantId === restaurantId);
+    const vals = list.map(reviewVenueAspectScore).filter((v) => v != null);
+    if (!vals.length) return null;
+    const sum = vals.reduce((a, b) => a + b, 0);
+    return Math.round((sum / vals.length) * 10) / 10;
+  }
+
+  /** Середній загальний бал (для карток каталогу). */
   function avgRating(restaurantId) {
-    return avgVenueRating(restaurantId);
-  }
-
-  function clampHalfRating(n) {
-    const x = Number(n);
-    if (!Number.isFinite(x)) return 4;
-    return Math.min(5, Math.max(1, Math.round(x * 2) / 2));
+    return avgOverallRating(restaurantId);
   }
 
   function formatRatingUk(n) {
@@ -239,21 +311,128 @@
     return s.indexOf(".") >= 0 ? s.replace(".", ",") : s;
   }
 
-  function halfRatingSelectOptions(selectedVal) {
-    const sel = clampHalfRating(selectedVal);
-    let html = "";
-    for (let v = 5; v >= 1; v -= 0.5) {
-      const isSel = Math.abs(v - sel) < 0.001;
-      html +=
-        '<option value="' +
+  function buildReviewCategoryFormRowsHtml() {
+    return REVIEW_CATEGORY_DEFS.map(function (def) {
+      const v = 4;
+      return (
+        '<div class="review-cat-row">' +
+        '<label class="review-form__label" for="cat-val-' +
+        def.key +
+        '">' +
+        escapeHtml(def.label) +
+        " (1–5)</label>" +
+        '<div id="rating-cat-' +
+        def.key +
+        '" class="rating-input review-cat-stars" data-cat="' +
+        def.key +
+        '" data-value="' +
         v +
-        '"' +
-        (isSel ? " selected" : "") +
-        ">" +
-        formatRatingUk(v) +
-        " / 5</option>";
+        '">' +
+        starsHtml(v, true) +
+        "</div>" +
+        '<input type="hidden" id="cat-val-' +
+        def.key +
+        '" name="cat-' +
+        def.key +
+        '" value="' +
+        v +
+        '">' +
+        "</div>"
+      );
+    }).join("");
+  }
+
+  function bindReviewCategoryStars() {
+    REVIEW_CATEGORY_DEFS.forEach(function (def) {
+      const ratingEl = document.getElementById("rating-cat-" + def.key);
+      const hidden = document.getElementById("cat-val-" + def.key);
+      if (!ratingEl || !hidden) return;
+      let selectedRating = Math.min(
+        5,
+        Math.max(1, parseInt(hidden.value, 10) || 4)
+      );
+      function paintRatingInput(val) {
+        selectedRating = Math.min(5, Math.max(1, val));
+        hidden.value = String(selectedRating);
+        ratingEl.dataset.value = String(selectedRating);
+        ratingEl.innerHTML = starsHtml(selectedRating, true);
+        bindStarClicks();
+      }
+      function bindStarClicks() {
+        ratingEl.querySelectorAll(".star").forEach(function (star, idx) {
+          star.addEventListener("click", function () {
+            selectedRating = idx + 1;
+            paintRatingInput(selectedRating);
+          });
+          star.addEventListener("keydown", function (e) {
+            if (e.key === "Enter" || e.key === " ") {
+              e.preventDefault();
+              selectedRating = idx + 1;
+              paintRatingInput(selectedRating);
+            }
+          });
+        });
+      }
+      paintRatingInput(selectedRating);
+    });
+  }
+
+  /** Блок зірок для картки щоденника або списку рев'ю: нові категорії або старий формат. */
+  function reviewScoresBlockHtml(rev, extraWrapClass) {
+    const cr = reviewCategoryRatings(rev);
+    const overall = reviewOverallScore(rev);
+    const wrapCls =
+      "review-scores" + (extraWrapClass ? " " + extraWrapClass : "");
+    if (cr && overall != null) {
+      const cats = REVIEW_CATEGORY_DEFS.map(function (d) {
+        return (
+          '<span class="review-scores__cat" title="' +
+          escapeHtml(d.label) +
+          '">' +
+          escapeHtml(d.abbr) +
+          " " +
+          formatRatingUk(cr[d.key]) +
+          "</span>"
+        );
+      }).join("");
+      return (
+        '<div class="' +
+        wrapCls +
+        ' review-scores--cats">' +
+        '<div class="review-scores__overall">' +
+        '<span class="review-scores__label">Загалом</span>' +
+        starsHtml(overall) +
+        " <strong>" +
+        formatRatingUk(overall) +
+        "</strong> " +
+        '<span class="review-scores__note">(середнє за 6 категоріями)</span></div>' +
+        '<div class="review-scores__cats">' +
+        cats +
+        "</div></div>"
+      );
     }
-    return html;
+    const dScore = reviewDishAspectScore(rev);
+    const vScore = reviewVenueAspectScore(rev);
+    return (
+      '<div class="' +
+      wrapCls +
+      '">' +
+      (dScore != null
+        ? '<span class="review-scores__pair"><span class="review-scores__label">Страва</span>' +
+          starsHtml(dScore) +
+          " <strong>" +
+          formatRatingUk(dScore) +
+          "</strong></span>"
+        : "") +
+      (vScore != null
+        ? '<span class="review-scores__pair"><span class="review-scores__label">Заклад</span>' +
+          starsHtml(vScore) +
+          " <strong>" +
+          formatRatingUk(vScore) +
+          "</strong></span>"
+        : "") +
+      "</div>"
+    );
   }
 
   function restaurantPageHref(id, fromSection, listIdParam) {
@@ -370,7 +549,7 @@
       hasAvg ? "" : "stars--muted"
     );
     const scoreClass = "rest-card__score" + (hasAvg ? "" : " is-muted");
-    const scoreText = hasAvg ? String(avg) : "—";
+    const scoreText = hasAvg ? formatRatingUk(avg) : "—";
     const fav = isFavorite(r.id);
     const href = restaurantPageHref(r.id, fromSection, listIdForLink);
     return (
@@ -515,28 +694,10 @@
         if (!r) return "";
         const imgSrc = restaurantImageUrl(r);
         const onErr = restaurantImgOnError(r);
-        const vScore = reviewVenueScore(rev);
-        const dScore = reviewDishScore(rev);
         const dishLine = rev.dishName
           ? '<p class="diary-card__dish">' + escapeHtml(rev.dishName) + "</p>"
           : "";
-        const scoresHtml =
-          '<div class="diary-card__scores">' +
-          (dScore != null
-            ? '<span class="diary-card__score-block"><span class="diary-card__score-label">Страва</span>' +
-              starsHtml(dScore) +
-              " <strong>" +
-              formatRatingUk(dScore) +
-              "</strong></span>"
-            : "") +
-          (vScore != null
-            ? '<span class="diary-card__score-block"><span class="diary-card__score-label">Заклад</span>' +
-              starsHtml(vScore) +
-              " <strong>" +
-              formatRatingUk(vScore) +
-              "</strong></span>"
-            : "") +
-          "</div>";
+        const scoresHtml = reviewScoresBlockHtml(rev, "diary-card__scores");
         const again =
           typeof rev.wouldAgain === "boolean"
             ? '<span class="diary-card__again' +
@@ -904,8 +1065,9 @@
       return;
     }
 
-    const avgVenue = avgVenueRating(r.id);
-    const avgDish = avgDishRating(r.id);
+    const avgOverall = avgOverallRating(r.id);
+    const avgDishAsp = avgDishAspectRating(r.id);
+    const avgVenueAsp = avgVenueAspectRating(r.id);
     const list = reviews
       .filter((x) => x.restaurantId === id)
       .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
@@ -945,42 +1107,50 @@
       " · " +
       escapeHtml(r.address) +
       "</p>" +
-      (avgVenue != null || avgDish != null
+      (avgOverall != null ||
+      avgDishAsp != null ||
+      avgVenueAsp != null
         ? '<div class="rest-hero__avg-wrap">' +
-          (avgDish != null
+          (avgOverall != null
             ? '<p class="rest-hero__avg">' +
-              starsHtml(avgDish) +
-              " <span>страва в середньому " +
-              formatRatingUk(avgDish) +
+              starsHtml(avgOverall) +
+              " <span>загалом у середньому " +
+              formatRatingUk(avgOverall) +
+              " (середнє за категоріями)</span></p>"
+            : "") +
+          (avgDishAsp != null
+            ? '<p class="rest-hero__avg' +
+              (avgOverall != null ? " rest-hero__avg--secondary" : "") +
+              '">' +
+              starsHtml(avgDishAsp) +
+              " <span>страва (смак + подача): " +
+              formatRatingUk(avgDishAsp) +
               "</span></p>"
             : "") +
-          (avgVenue != null
+          (avgVenueAsp != null
             ? '<p class="rest-hero__avg' +
-              (avgDish != null ? " rest-hero__avg--secondary" : "") +
+              (avgOverall != null || avgDishAsp != null
+                ? " rest-hero__avg--secondary"
+                : "") +
               '">' +
-              starsHtml(avgVenue) +
-              " <span>заклад у середньому " +
-              formatRatingUk(avgVenue) +
+              starsHtml(avgVenueAsp) +
+              " <span>заклад (сервіс, атмосфера…): " +
+              formatRatingUk(avgVenueAsp) +
               "</span></p>"
             : "") +
           "</div>"
-        : '<p class="rest-hero__avg muted">Ще немає оцінок — залиште перший запис про страву</p>') +
+        : '<p class="rest-hero__avg muted">Ще немає оцінок — залиште перший запис</p>') +
       "</div></div></div>" +
       '<div class="rest-layout">' +
       '<section class="rest-reviews">' +
       "<h2>Рев'ю</h2>" +
       '<form id="review-form" class="review-form">' +
-      '<p class="review-form__lead">Оцініть окремо <strong>страву</strong> та <strong>заклад</strong> — так видно, де все топ, а де лише одна страва.</p>' +
+      '<p class="review-form__lead">Оцініть заклад за <strong>шістьма категоріями</strong> (1–5 зірок кожна). Загальний бал — середнє арифметичне; окремо показуємо підсумок «про страву» та «про заклад».</p>' +
       '<label class="review-form__label" for="review-dish-name">Страва</label>' +
       '<input type="text" id="review-dish-name" name="dishName" class="review-form__input" required maxlength="160" placeholder="Наприклад: курячий пян-се" autocomplete="off">' +
-      '<label class="review-form__label" for="review-dish-rating">Оцінка страви</label>' +
-      '<select id="review-dish-rating" name="dishRating" class="review-form__select" required>' +
-      halfRatingSelectOptions(4.5) +
-      "</select>" +
-      '<label class="review-form__label" for="review-venue-rating">Оцінка закладу</label>' +
-      '<select id="review-venue-rating" name="venueRating" class="review-form__select" required>' +
-      halfRatingSelectOptions(4) +
-      "</select>" +
+      '<div class="review-form__cats" id="review-cat-rows">' +
+      buildReviewCategoryFormRowsHtml() +
+      "</div>" +
       '<fieldset class="review-form__fieldset">' +
       '<legend class="review-form__label">Чи взяв би цю страву знову?</legend>' +
       '<div class="review-form__radios">' +
@@ -1005,28 +1175,10 @@
     if (list.length) {
       listEl.innerHTML = list
         .map(function (rev) {
-          const v = reviewVenueScore(rev);
-          const d = reviewDishScore(rev);
           const dishTitle = rev.dishName
             ? '<p class="review-item__dish">' + escapeHtml(rev.dishName) + "</p>"
             : "";
-          const scores =
-            '<div class="review-item__scores">' +
-            (d != null
-              ? '<span class="review-item__score"><span class="review-item__score-lbl">Страва</span> ' +
-                starsHtml(d) +
-                " <strong>" +
-                formatRatingUk(d) +
-                "</strong></span>"
-              : "") +
-            (v != null
-              ? '<span class="review-item__score"><span class="review-item__score-lbl">Заклад</span> ' +
-                starsHtml(v) +
-                " <strong>" +
-                formatRatingUk(v) +
-                "</strong></span>"
-              : "") +
-            "</div>";
+          const scores = reviewScoresBlockHtml(rev, "review-item__scores");
           const again =
             typeof rev.wouldAgain === "boolean"
               ? '<span class="review-item__again ' +
@@ -1063,12 +1215,38 @@
         showToast("Вкажіть назву страви (хоча б 2 символи)");
         return;
       }
-      const dishRating = clampHalfRating(
-        parseFloat(document.getElementById("review-dish-rating").value)
-      );
-      const venueRating = clampHalfRating(
-        parseFloat(document.getElementById("review-venue-rating").value)
-      );
+      const categoryRatings = {};
+      for (let i = 0; i < REVIEW_CATEGORY_DEFS.length; i++) {
+        const k = REVIEW_CATEGORY_DEFS[i].key;
+        const hid = document.getElementById("cat-val-" + k);
+        let cv = hid ? parseInt(hid.value, 10) : NaN;
+        if (!Number.isFinite(cv) || cv < 1 || cv > 5) {
+          showToast("Перевірте оцінки всіх категорій (1–5)");
+          return;
+        }
+        categoryRatings[k] = cv;
+      }
+      const dishRating =
+        Math.round(
+          ((categoryRatings.taste + categoryRatings.presentation) / 2) * 10
+        ) / 10;
+      const venueRating =
+        Math.round(
+          ((categoryRatings.service +
+            categoryRatings.atmosphere +
+            categoryRatings.value +
+            categoryRatings.hygiene) /
+            4) *
+            10
+        ) / 10;
+      const overallFromCats =
+        Math.round(
+          (REVIEW_CATEGORY_DEFS.reduce(function (s, d) {
+            return s + categoryRatings[d.key];
+          }, 0) /
+            REVIEW_CATEGORY_DEFS.length) *
+            10
+        ) / 10;
       const againEl = document.querySelector(
         'input[name="wouldAgain"]:checked'
       );
@@ -1082,10 +1260,11 @@
         id: "rev_" + Date.now(),
         restaurantId: r.id,
         dishName: dishName,
+        categoryRatings: categoryRatings,
         dishRating: dishRating,
         venueRating: venueRating,
         wouldAgain: wouldAgain,
-        rating: venueRating,
+        rating: overallFromCats,
         body: body,
         createdAt: new Date().toISOString(),
       });
@@ -1096,6 +1275,8 @@
       renderBrowse(els.search.value);
       renderFavorites(els.search.value);
     });
+
+    bindReviewCategoryStars();
   }
 
   function readPickFiltersFromForm() {
@@ -1176,8 +1357,8 @@
         ? '<p class="pick-result__avg">' +
           starsHtml(avg) +
           " <span>" +
-          avg +
-          " у щоденнику</span></p>"
+          formatRatingUk(avg) +
+          " у щоденнику (середнє за категоріями)</span></p>"
         : '<p class="pick-result__avg muted">Ще без оцінок у щоденнику</p>') +
       '<div class="pick-result__actions">' +
       '<a class="btn btn--primary" href="' +

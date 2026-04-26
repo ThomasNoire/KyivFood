@@ -18,6 +18,7 @@
     const bn = /басейна[^,]*,\s*(\d+)/i.exec(r.address || "");
     const bnum = bn ? parseInt(bn[1], 10) : NaN;
     if (!Number.isNaN(bnum) && bnum >= 12) return "poznyaky";
+    if (/соборності|ахматової/i.test(a)) return "poznyaky";
     return "center";
   }
 

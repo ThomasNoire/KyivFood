@@ -336,6 +336,60 @@ img {
   color: var(--text-muted);
 }
 
+/* Спільний блок оцінок (щоденник + список рев'ю), зокрема 6 категорій */
+.review-scores {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.65rem 1rem;
+}
+
+.review-scores--cats {
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.45rem;
+}
+
+.review-scores__overall,
+.review-scores__pair {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.35rem 0.5rem;
+  font-size: 0.88rem;
+  color: var(--accent-warm);
+}
+
+.review-scores__label {
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-muted);
+}
+
+.review-scores__note {
+  font-size: 0.72rem;
+  font-weight: 500;
+  color: var(--text-muted);
+}
+
+.review-scores__cats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem 0.55rem;
+  font-size: 0.78rem;
+  line-height: 1.35;
+  color: var(--text-muted);
+}
+
+.review-scores__cat {
+  padding: 0.08rem 0.42rem;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid var(--border);
+}
+
 .diary-card__again {
   display: inline-block;
   margin-left: 0.35rem;
@@ -1371,6 +1425,31 @@ img {
   font-size: 0.92rem;
   color: var(--text-muted);
   line-height: 1.5;
+}
+
+.review-form__cats {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+  margin-bottom: 0.25rem;
+}
+
+.review-cat-row {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.review-cat-row .review-form__label {
+  margin-bottom: 0;
+}
+
+.review-cat-stars {
+  align-self: flex-start;
+}
+
+.review-form__cats .rating-input {
+  margin-bottom: 0;
 }
 
 .review-form__input,
