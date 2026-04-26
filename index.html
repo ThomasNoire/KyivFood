@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="uk">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta
+      name="description"
+      content="Щоденник смаку Києва — рев'ю та зірки для їжі в ресторанах Києва."
+    />
+    <title>KyivFood — щоденник смаку Києва</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=Outfit:wght@500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="css/main.css" />
+  </head>
+  <body>
+    <a class="skip-link" href="#main">До контенту</a>
+    <div class="page">
+      <header class="site-header">
+        <div class="site-header__inner">
+          <a href="#/" class="brand" aria-label="KyivFood — головна">
+            <span class="brand__mark" aria-hidden="true"></span>
+            <span class="brand__text">KyivFood</span>
+          </a>
+          <nav class="site-nav" aria-label="Головна навігація">
+            <a href="#/" class="site-nav__link is-active" id="nav-browse"
+              >Ресторани</a
+            >
+            <a href="#/today" class="site-nav__link" id="nav-pick"
+              >Куди сьогодні</a
+            >
+            <a href="#/favorites" class="site-nav__link" id="nav-favorites"
+              >Обране</a
+            >
+            <a href="#/diary" class="site-nav__link" id="nav-home">Щоденник</a>
+          </nav>
+          <div class="site-header__search">
+            <label for="global-search" class="visually-hidden">Пошук</label>
+            <input
+              type="search"
+              id="global-search"
+              class="input-search"
+              placeholder="Пошук ресторану або рев'ю…"
+              autocomplete="off"
+            />
+          </div>
+        </div>
+      </header>
+
+      <main id="main" class="main">
+        <section
+          id="view-browse"
+          class="view"
+          aria-labelledby="browse-heading"
+        >
+          <div class="page-head">
+            <h1 id="browse-heading">Ресторани Києва</h1>
+            <p class="page-head__sub">
+              Спочатку оберіть тип кухні (або «Усі заклади»), потім заклад — та залиште враження про їжу.
+            </p>
+          </div>
+          <div
+            class="browse-cuisine-wrap"
+            id="browse-cuisine-wrap"
+            aria-live="polite"
+          ></div>
+          <div class="browse-shell">
+            <div id="browse-grid" class="browse-grid"></div>
+            <nav
+              id="browse-pagination"
+              class="pagination"
+              aria-label="Сторінки каталогу ресторанів"
+              hidden
+            ></nav>
+          </div>
+          <section
+            class="lists-section"
+            id="browse-lists-section"
+            aria-labelledby="lists-heading"
+          >
+            <h2 id="lists-heading" class="section-title">Списки</h2>
+            <p class="lists-section__intro">
+              Готові добірки київських закладів. Оберіть тему й
+              одразу бачите заклади в місті.
+            </p>
+            <div id="browse-lists" class="lists-grid"></div>
+          </section>
+        </section>
+
+        <section id="view-list" class="view" hidden>
+          <div id="list-detail"></div>
+        </section>
+
+        <section
+          id="view-pick"
+          class="view view-pick"
+          hidden
+          aria-labelledby="pick-heading"
+        >
+          <div class="pick-layout">
+            <header class="pick-hero">
+              <p class="pick-hero__eyebrow">Підказка на вечір</p>
+              <h1 id="pick-heading">Куди сьогодні?</h1>
+              <p class="pick-hero__lead">
+                Оберіть район, бюджет і настрій — покажемо один випадковий заклад
+                з каталогу Києва.
+              </p>
+            </header>
+
+            <form id="pick-form" class="pick-form" novalidate>
+              <div class="pick-field">
+                <span class="pick-field__label" id="pick-l-district">Район</span>
+                <div
+                  class="pick-pills"
+                  role="radiogroup"
+                  aria-labelledby="pick-l-district"
+                >
+                  <label class="pick-pill"
+                    ><input type="radio" name="pick-district" value="any" checked />
+                    <span>Будь-який</span></label
+                  >
+                  <label class="pick-pill"
+                    ><input type="radio" name="pick-district" value="podil" />
+                    <span>Поділ</span></label
+                  >
+                  <label class="pick-pill"
+                    ><input type="radio" name="pick-district" value="center" />
+                    <span>Центр</span></label
+                  >
+                  <label class="pick-pill"
+                    ><input type="radio" name="pick-district" value="obolon" />
+                    <span>Оболонь</span></label
+                  >
+                  <label class="pick-pill"
+                    ><input type="radio" name="pick-district" value="poznyaky" />
+                    <span>Позняки</span></label
+                  >
+                </div>
+              </div>
+
+              <div class="pick-field">
+                <span class="pick-field__label" id="pick-l-budget">Бюджет</span>
+                <div
+                  class="pick-pills"
+                  role="radiogroup"
+                  aria-labelledby="pick-l-budget"
+                >
+                  <label class="pick-pill"
+                    ><input type="radio" name="pick-budget" value="any" checked />
+                    <span>Будь-який</span></label
+                  >
+                  <label class="pick-pill"
+                    ><input type="radio" name="pick-budget" value="budget300" />
+                    <span>До 300 ₴</span></label
+                  >
+                  <label class="pick-pill"
+                    ><input type="radio" name="pick-budget" value="budget600" />
+                    <span>До 600 ₴</span></label
+                  >
+                </div>
+              </div>
+
+              <div class="pick-field">
+                <span class="pick-field__label" id="pick-l-cuisine">Кухня</span>
+                <div
+                  class="pick-pills"
+                  role="radiogroup"
+                  aria-labelledby="pick-l-cuisine"
+                >
+                  <label class="pick-pill"
+                    ><input type="radio" name="pick-cuisine" value="any" checked />
+                    <span>Будь-яка</span></label
+                  >
+                  <label class="pick-pill"
+                    ><input type="radio" name="pick-cuisine" value="pizza" />
+                    <span>Піца</span></label
+                  >
+                  <label class="pick-pill"
+                    ><input type="radio" name="pick-cuisine" value="sushi" />
+                    <span>Суші</span></label
+                  >
+                  <label class="pick-pill"
+                    ><input type="radio" name="pick-cuisine" value="burgers" />
+                    <span>Бургери</span></label
+                  >
+                  <label class="pick-pill"
+                    ><input type="radio" name="pick-cuisine" value="coffee" />
+                    <span>Кава</span></label
+                  >
+                  <label class="pick-pill"
+                    ><input type="radio" name="pick-cuisine" value="ukrainian" />
+                    <span>Українська</span></label
+                  >
+                </div>
+              </div>
+
+              <div class="pick-actions">
+                <button type="button" class="btn btn--ghost" id="pick-surprise">
+                  Повна випадковість
+                </button>
+                <button type="submit" class="btn btn--primary" id="pick-submit">
+                  Підказати заклад
+                </button>
+              </div>
+            </form>
+
+            <div id="pick-result" class="pick-result" hidden></div>
+          </div>
+        </section>
+
+        <section
+          id="view-favorites"
+          class="view"
+          hidden
+          aria-labelledby="favorites-heading"
+        >
+          <div class="page-head">
+            <h1 id="favorites-heading">Обране</h1>
+            <p class="page-head__sub">
+              Ресторани, які ви позначили сердечком — швидкий доступ до улюблених
+              закладів.
+            </p>
+          </div>
+          <div id="favorites-grid" class="browse-grid browse-grid--favorites"></div>
+        </section>
+
+        <section
+          id="view-home"
+          class="view"
+          hidden
+          aria-labelledby="home-heading"
+        >
+          <div class="hero hero--home">
+            <div class="hero__copy">
+              <h1 id="home-heading">Смак Києва, як у щоденнику</h1>
+              <p class="hero__lead">
+                Оцінюйте їжу зірками, пишіть рев'ю та обирайте заклад у каталозі
+                київських ресторанів
+              </p>
+            </div>
+          </div>
+
+          <div class="home-feed">
+            <h2 class="section-title">Останні записи</h2>
+            <div id="feed-list" class="feed"></div>
+          </div>
+        </section>
+
+        <section id="view-restaurant" class="view" hidden>
+          <div id="restaurant-detail"></div>
+        </section>
+      </main>
+
+      <footer class="site-footer">
+        <p>
+        Рев'ю (поки що) зберігаються локально у вашому браузері. 
+        </p>
+      </footer>
+    </div>
+
+    <div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
+
+    <script src="js/data/restaurants.js"></script>
+    <script src="js/data/cuisine-filters.js"></script>
+    <script src="js/data/pick-tags.js"></script>
+    <script src="js/data/lists.js"></script>
+    <script src="js/storage.js"></script>
+    <script src="js/app.js"></script>
+    <script>
+      document.addEventListener("DOMContentLoaded", function () {
+        if (typeof initKyivFoodApp === "function") initKyivFoodApp();
+      });
+    </script>
+  </body>
+</html>
