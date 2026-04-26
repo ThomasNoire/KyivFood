@@ -86,7 +86,7 @@ window.KYIV_RESTAURANTS = [
   },
   {
     id: "chinanay-sobornosti",
-    name: "Chinanay",
+    name: "Чайнахай (Chinanay)",
     cuisine: "Китайська",
     address: "просп. Соборності, 7Б",
     photo: "https://images.unsplash.com/photo-1582878826623-82b0d45a9e39?w=800&q=80",
@@ -324,7 +324,7 @@ window.KYIV_RESTAURANTS = [
   },
   {
     id: "china-house-45",
-    name: "China House",
+    name: "Чайнахай",
     cuisine: "Китайська",
     address: "вул. Басейна, 4",
     photo: "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=800&q=80",
